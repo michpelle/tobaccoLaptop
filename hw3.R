@@ -1,4 +1,5 @@
 library(tidyverse)
+library(AER)
 
 data <- readRDS("TaxBurden_Data.rds")
 
@@ -81,12 +82,29 @@ ggplot(Q6, aes(x=Year, y=avgSales)) + geom_point()
 
 # ATE
 # 1. Focusing only on the time period from 1970 to 1990, regress log sales on log prices to estimate the price elasticity of demand over that period. Interpret your results.
+seventyToNinety <- data %>% filter(Year>=1970 && Year<=1990) %>% mutate(ln_sales = log(sales_per_capita)) %>% mutate(ln_price = log(cost_per_pack))
+regress <- lm(ln_sales ~ ln_price, data=seventyToNinety)
+regress
 
 # 2. Again limiting to 1970 to 1990, regress log sales on log prices using the total (federal and state) cigarette tax (in dollars) as an instrument for log prices. Interpret your results and compare your estimates to those without an instrument. Are they different? If so, why?
+ivreg(formula = ln_sales ~ ln_price | tax_dollar, data = seventyToNinety)
 
 # 3. Show the first stage and reduced-form results from the instrument.
+# first stage
+firstStage <- lm(ln_price ~ tax_dollar, data = seventyToNinety)
+coeftest(firstStage, vcov = vcovHC, type = "HC1")
+summary(firstStage)$r.squared
+
+step1 <- lm(ln_price ~ tax_dollar, data=seventyToNinety)
+pricehat <- predict(step1)
+
+# reduced-form
+
 
 # 4. Repeat questions 1-3 focusing on the period from 1991 to 2015.
+ninetyToFifteen <- data %>% filter(Year>=1991 && Year<=2015) %>% mutate(ln_sales = log(sales_per_capita)) %>% mutate(ln_price = log(cost_per_pack))
+regress2 <- lm(ln_sales ~ ln_price, data=ninetyToFifteen)
+regress2
 
 # 5. Compare your elasticity estimates from 1970-1990 versus those from 1991-2015. Are they different? If so, why?
 
